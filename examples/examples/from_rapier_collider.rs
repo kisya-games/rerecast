@@ -1,14 +1,14 @@
 //! A test scene that only uses primitive shapes.
 
-use avian_rerecast::prelude::*;
-use avian3d::prelude::*;
 use bevy::{
     color::palettes::tailwind,
     input::common_conditions::input_just_pressed,
     prelude::*,
     remote::{RemotePlugin, http::RemoteHttpPlugin},
 };
+use bevy_rapier3d::prelude::*;
 use bevy_rerecast::{debug::DetailNavmeshGizmo, prelude::*};
+use rapier_rerecast::prelude::*;
 
 fn main() -> AppExit {
     App::new()
@@ -16,9 +16,9 @@ fn main() -> AppExit {
             file_path: "../assets".to_string(),
             ..default()
         }))
-        .add_plugins(PhysicsPlugins::default())
+        .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
         .add_plugins((RemotePlugin::default(), RemoteHttpPlugin::default()))
-        .add_plugins((NavmeshPlugins::default(), AvianBackendPlugin::default()))
+        .add_plugins((NavmeshPlugins::default(), RapierBackendPlugin::default()))
         .add_systems(Startup, setup)
         .add_systems(
             Update,
@@ -35,42 +35,42 @@ fn setup(
 ) {
     let material_gray = materials.add(Color::from(tailwind::GRAY_300));
     let material_red = materials.add(Color::from(tailwind::RED_500));
-    let shape = Cuboid::new(50.0, 0.1, 50.0);
+
     commands.spawn((
         Name::new("Ground"),
-        Mesh3d(meshes.add(shape)),
-        RigidBody::Static,
-        Collider::from(shape),
+        RigidBody::Fixed,
+        Collider::cuboid(50.0, 0.1, 50.0),
+        Mesh3d(meshes.add(Cuboid::new(50.0, 0.1, 50.0))),
         MeshMaterial3d(material_gray.clone()),
     ));
-    let shape = Cuboid::new(3.0, 2.0, 1.0);
+
     commands.spawn((
         Name::new("Cube"),
-        Mesh3d(meshes.add(shape)),
-        RigidBody::Static,
-        Collider::from(shape),
+        RigidBody::Fixed,
+        Collider::cuboid(3.0, 2.0, 1.0),
+        Mesh3d(meshes.add(Cuboid::new(3.0, 2.0, 1.0))),
         Transform::from_xyz(0.0, 1.0, 0.0),
         MeshMaterial3d(material_gray.clone()),
     ));
-    let shape = Cuboid::new(1.0, 2.0, 3.0);
+
     commands.spawn((
         Name::new("Cube"),
-        Mesh3d(meshes.add(shape)),
-        RigidBody::Static,
-        Collider::from(shape),
+        RigidBody::Fixed,
+        Collider::cuboid(1.0, 2.0, 3.0),
+        Mesh3d(meshes.add(Cuboid::new(1.0, 2.0, 3.0))),
         Transform::from_xyz(-4.0, 1.0, 5.0),
         MeshMaterial3d(material_gray.clone()),
     ));
 
-    let shape = Cuboid::new(10.0, 1.0, 10.0);
     commands.spawn((
         Name::new("Cube"),
-        Mesh3d(meshes.add(shape)),
-        RigidBody::Static,
-        Collider::from(shape),
+        RigidBody::Fixed,
+        Collider::cuboid(10.0, 1.0, 10.0),
+        Mesh3d(meshes.add(Cuboid::new(10.0, 1.0, 10.0))),
         Transform::from_xyz(10.0, 3.0, 3.0),
         MeshMaterial3d(material_red.clone()),
     ));
+
     commands.spawn((
         DirectionalLight {
             shadows_enabled: true,
@@ -84,7 +84,7 @@ fn setup(
     ));
 
     commands.spawn((
-        Text::new("Press space to generate navmesh from avian colliders"),
+        Text::new("Press space to generate navmesh from rapier colliders"),
         Node {
             position_type: PositionType::Absolute,
             top: Val::Px(12.0),
